@@ -1,0 +1,13 @@
+# Render.com – Web Service for WEBTARBUTU
+# Connect repo and ensure BUILD_COMMAND and START_COMMAND are set (or use below).
+services:
+  - type: web
+    name: webtarbutu
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # PORT is set by Render automatically
+      # Add in Render dashboard: OPENAI_API_KEY, SUPABASE_*, PIPEDRIVE_*, MONDAY_*, ALERT_*, SMTP_*, AGENCY_NAME, TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_WHATSAPP_FROM. Do not set PORT – Render sets it.
