@@ -1,19 +1,20 @@
 /**
- * Crawls the full agency website (tarbutu.co.il). Result cached 8 hours.
- * Automatic refresh every 8 hours.
+ * סורק את כל האתר של הסוכנות (tarbutu.co.il): מתחיל מדף הבית ועוקב אחרי כל הקישורים הפנימיים.
+ * התוצאה נשמרת במטמון ומתעדכנת אוטומטית כל כמה שעות.
  */
 
 import axios from 'axios';
 import { config } from '../config.js';
 
 const BASE_URL = (config.websiteUrl || 'https://tarbutu.co.il').replace(/\/$/, '');
-const CACHE_TTL_MS = 8 * 60 * 60 * 1000; // 8 hours
-const REFRESH_INTERVAL_MS = 8 * 60 * 60 * 1000; // 8 hours – periodic rescan
-const MAX_TOTAL_LENGTH = 45000;   // total chars to send to AI
-const MAX_PER_PAGE = 8000;        // trim each page
-const MAX_PAGES = 120;            // max pages to crawl
-const BATCH_SIZE = 5;             // concurrent requests
-const DELAY_MS = 300;             // delay between batches (avoid overloading server)
+const CRAWL_INTERVAL_HOURS = Math.max(1, parseInt(process.env.WEBSITE_CRAWL_INTERVAL_HOURS || '8', 10) || 8);
+const CACHE_TTL_MS = CRAWL_INTERVAL_HOURS * 60 * 60 * 1000;
+const REFRESH_INTERVAL_MS = CACHE_TTL_MS;
+const MAX_TOTAL_LENGTH = 100000;  // תוכן מכל האתר – מספיק ל־AI
+const MAX_PER_PAGE = 12000;       // תווים לכל דף
+const MAX_PAGES = 250;            // סריקת עד 250 דפים – כיסוי מלא של האתר
+const BATCH_SIZE = 5;
+const DELAY_MS = 300;
 
 let cachedText = '';
 let cacheTime = 0;
@@ -101,6 +102,11 @@ export async function getWebsiteContext() {
   const visited = new Set();
   const seed = normalizeUrl(BASE_URL + '/', BASE_URL) || BASE_URL;
   const toVisit = [seed];
+  const seedUrls = (config.websiteSeedUrls || []).filter(Boolean);
+  seedUrls.forEach((u) => {
+    const norm = normalizeUrl(u, BASE_URL) || u;
+    if (!visited.has(norm) && !toVisit.includes(norm)) toVisit.push(norm);
+  });
   const pageTexts = [];
   let totalLength = 0;
 
@@ -138,7 +144,7 @@ export async function getWebsiteContext() {
       const combined = pageTexts.join('\n\n---\n\n').slice(0, MAX_TOTAL_LENGTH);
       cachedText = combined;
       cacheTime = Date.now();
-      console.log(`[websiteContent] Crawled ${visited.size} pages, ${combined.length} chars`);
+      console.log(`[websiteContent] Crawled ${visited.size} pages, ${combined.length} chars (full site, refresh every ${CRAWL_INTERVAL_HOURS}h)`);
       return cachedText;
     }
   } catch (err) {
@@ -147,6 +153,15 @@ export async function getWebsiteContext() {
 
   if (cachedText && cachedText.length > 200) return cachedText;
   return FALLBACK_CONTENT;
+}
+
+/** לבדיקה: מתי בוצעה הסריקה האחרונה וכמה תווים נאספו */
+export function getCrawlStatus() {
+  return {
+    lastCrawledAt: cacheTime ? new Date(cacheTime).toISOString() : null,
+    totalChars: cachedText.length,
+    refreshIntervalHours: CRAWL_INTERVAL_HOURS,
+  };
 }
 
 export function preloadWebsiteContext() {
@@ -159,7 +174,7 @@ export function startPeriodicRefresh() {
     cacheTime = 0;
     cachedText = '';
     getWebsiteContext().then(() => {
-      console.log('[websiteContent] Periodic 8h refresh completed');
+      console.log('[websiteContent] Periodic full-site refresh completed');
     }).catch((err) => {
       console.warn('[websiteContent] Periodic refresh failed:', err.message);
     });
