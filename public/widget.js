@@ -164,8 +164,6 @@
     sessionStorage.setItem('webtarbutu_session', sessionId);
     var utm = getUtm();
 
-    panel.style.display = 'flex';
-
     bubble.addEventListener('click', function () {
       var open = panel.style.display === 'flex';
       panel.style.display = open ? 'none' : 'flex';
