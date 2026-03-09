@@ -1,0 +1,18 @@
+# דפי seed לסריקת האתר – כדי שהבוט יענה "איזה תאריכים יש ל-[יעד]?"
+
+הוסף ב-Render → Environment את המשתנה WEBSITE_SEED_URLS עם הערך הבא (כתובת אחת בשורה, מחוברות בפסיק):
+
+https://tarbutu.co.il/קרוזים-לפיורדים
+https://tarbutu.co.il/הכף-הצפוני
+https://tarbutu.co.il/קרוזים-לאיסלנד-והאיים-הבריטיים
+https://tarbutu.co.il/קרוזים
+https://tarbutu.co.il/טיולי-תרבות
+https://tarbutu.co.il/שייט-נהרות
+https://tarbutu.co.il/קרוזים-בים-הבלטי
+https://tarbutu.co.il/קרוז-לקנדה-מערב-ואלסקה
+https://tarbutu.co.il/קרוזים-לאיים-הבריטיים
+
+במשתנה אחד (העתק לשורה אחת, עם פסיקים):
+https://tarbutu.co.il/קרוזים-לפיורדים,https://tarbutu.co.il/הכף-הצפוני,https://tarbutu.co.il/קרוזים-לאיסלנד-והאיים-הבריטיים,https://tarbutu.co.il/קרוזים,https://tarbutu.co.il/טיולי-תרבות,https://tarbutu.co.il/שייט-נהרות,https://tarbutu.co.il/קרוזים-בים-הבלטי,https://tarbutu.co.il/קרוז-לקנדה-מערב-ואלסקה,https://tarbutu.co.il/קרוזים-לאיים-הבריטיים
+
+אחרי שמירה: Manual Deploy. הבוט מקבל גם גיבוי תאריכים מקוד (openai.js) – עדכן שם אם מוסיפים יעדים.

@@ -18,6 +18,8 @@ const DELAY_MS = 300;
 
 let cachedText = '';
 let cacheTime = 0;
+/** אחרון שגיאה בסריקה – לבדיקה ב־/api/website-context-status */
+let lastCrawlError = null;
 
 /** Fallback when crawl fails completely */
 const FALLBACK_CONTENT = `
@@ -144,23 +146,28 @@ export async function getWebsiteContext() {
       const combined = pageTexts.join('\n\n---\n\n').slice(0, MAX_TOTAL_LENGTH);
       cachedText = combined;
       cacheTime = Date.now();
+      lastCrawlError = null;
       console.log(`[websiteContent] Crawled ${visited.size} pages, ${combined.length} chars (full site, refresh every ${CRAWL_INTERVAL_HOURS}h)`);
       return cachedText;
     }
   } catch (err) {
-    console.warn('Website crawl error:', err.message);
+    lastCrawlError = err.message || String(err);
+    console.warn('Website crawl error:', lastCrawlError);
   }
 
   if (cachedText && cachedText.length > 200) return cachedText;
+  lastCrawlError = lastCrawlError || (pageTexts.length === 0 ? 'לא נאסף תוכן מדפים (timeout/חסימה/דפים ריקים)' : null);
   return FALLBACK_CONTENT;
 }
 
-/** לבדיקה: מתי בוצעה הסריקה האחרונה וכמה תווים נאספו */
+/** לבדיקה: מתי בוצעה הסריקה האחרונה, כמה תווים, ושגיאה אם הייתה */
 export function getCrawlStatus() {
   return {
     lastCrawledAt: cacheTime ? new Date(cacheTime).toISOString() : null,
     totalChars: cachedText.length,
     refreshIntervalHours: CRAWL_INTERVAL_HOURS,
+    lastError: lastCrawlError || undefined,
+    baseUrl: BASE_URL,
   };
 }
 
