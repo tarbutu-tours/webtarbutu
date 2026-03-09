@@ -134,6 +134,18 @@ export async function handleIncomingMessage(channel, externalId, content, { from
   const welcomeNext = await getWelcomeOrNext(channel, externalId, utm);
   if (welcomeNext) return welcomeNext;
 
+  const trimmedContent = (content || '').trim();
+  if (isChoosingIntent(trimmedContent)) {
+    const intentFromChoice = getIntentFromChoice(trimmedContent);
+    if (intentFromChoice) {
+      const fixedReply = intentFromChoice === 'sales'
+        ? 'מעולה, אשמח לעזור עם טיולים והזמנות. על איזה טיול או יעד תרצה לשמוע?'
+        : 'אשמח לעזור עם הזמנות קיימות ותמיכה. במה אתה צריך עזרה?';
+      await saveMessage(session.id, 'assistant', fixedReply);
+      return { reply: fixedReply, session, leadCaptured: false };
+    }
+  }
+
   const updatedSession = await getSessionById(session.id);
   const intent = updatedSession?.intent || 'sales';
   const recent = await getRecentMessages(session.id);
